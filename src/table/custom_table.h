@@ -1,6 +1,7 @@
 #pragma once
 #include "table.h"
 #include <vector>
+#include <map>
 
 #ifndef FIXED_BYTE_LEN
 #define FIXED_BYTE_LEN (2)
@@ -48,10 +49,11 @@ public:
 
 private:
   int64_t sum_col0_{0};
-  std::vector<int32_t> row_sum_array;
+  std::vector<int32_t> row_sum_array_;
   int32_t num_cols_{0};
   int32_t num_rows_{0};
   char *column_first4_{nullptr};
   char *column_last_{nullptr};
+  std::map<int16_t, std::vector<int32_t>> index_col0_; 
 };
 } // namespace bytedance_db_project
