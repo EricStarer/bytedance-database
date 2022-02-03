@@ -55,5 +55,6 @@ private:
   char *column_first4_{nullptr};
   char *column_last_{nullptr};
   std::map<int16_t, std::vector<int32_t>> index_col0_; 
+  std::map<int16_t, std::map<int16_t, std::vector<int32_t>>> index_col12_;
 };
 } // namespace bytedance_db_project

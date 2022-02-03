@@ -11,7 +11,7 @@ CustomTable::~CustomTable() {}
 
 void CustomTable::Load(BaseDataLoader *loader) {
   // TODO: Implement this!
-  int32_t val;
+  int32_t val, val_col1, val_col2;
   num_cols_ = loader->GetNumCols();
   auto rows = loader->GetRows();
   num_rows_ = rows.size();
@@ -41,6 +41,14 @@ void CustomTable::Load(BaseDataLoader *loader) {
         else{
           index_col0_[val] = std::vector<int32_t>{row_id};
         }
+      }
+      // load index_col12_
+      if(col_id == 1){
+        val_col1 = val;
+      }
+      if(col_id == 2){
+        val_col2 = val;
+        index_col12_[val_col1][val_col2].push_back(row_id);
       }
       // load row_sum_array_
       row_sum_array_[row_id] += val;
@@ -83,6 +91,24 @@ void CustomTable::PutIntField(int32_t row_id, int32_t col_id, int32_t field) {
         }
     }
   }
+  //change index_col12_
+  if(col_id == 1 || col_id == 2){
+    if(diff != 0){
+      int16_t val_col1 = GetIntField(row_id, 1);
+      int16_t val_col2 = GetIntField(row_id, 2);
+      std::vector<int32_t> &v = index_col12_[val_col1][val_col2];
+      auto pos = std::find(v.begin(), v.end(), row_id);
+      v.erase(pos);
+
+      int16_t new_val = (int16_t)field;
+      if(col_id == 1){
+        index_col12_[new_val][val_col2].push_back(row_id);
+      }
+      if(col_id == 2){
+        index_col12_[val_col1][new_val].push_back(row_id);
+      }
+    }
+  }
   if(col_id < 4){
     *(int16_t*)(column_first4_ + FIXED_BYTE_LEN*(col_id * num_rows_ + row_id)) = (int16_t)field;
   }
@@ -101,9 +127,19 @@ int64_t CustomTable::PredicatedColumnSum(int32_t threshold1,
                                          int32_t threshold2) {
   // TODO: Implement this!
   int64_t sum = 0;
-  for(auto row_id = 0; row_id < num_rows_; ++row_id){
-    if(GetIntField(row_id, 1) > threshold1 && GetIntField(row_id, 2) < threshold2){
-      sum += GetIntField(row_id, 0);
+  // for(auto row_id = 0; row_id < num_rows_; ++row_id){
+  //   if(GetIntField(row_id, 1) > threshold1 && GetIntField(row_id, 2) < threshold2){
+  //     sum += GetIntField(row_id, 0);
+  //   }
+  // }
+  int16_t threshold1_16 = (int16_t)threshold1;
+  int16_t threshold2_16 = (int16_t)threshold2;
+  for(auto iter1 = index_col12_.upper_bound(threshold1_16); iter1 != index_col12_.end(); ++iter1){
+    auto target_iter2 = iter1->second.lower_bound(threshold2_16);
+    for(auto iter2 = (iter1->second).begin(); iter2 != target_iter2; ++iter2){
+      for(int32_t row_id : iter2->second){
+        sum += GetIntField(row_id, 0);
+      }
     }
   }
   return sum;
