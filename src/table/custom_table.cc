@@ -42,6 +42,10 @@ void CustomTable::Load(BaseDataLoader *loader) {
           index_col0_[val] = std::vector<int32_t>{row_id};
         }
       }
+      // load index_col1_
+      if(col_id == 1){
+        index_col1_[val].push_back(row_id);
+      }
       // load row_sum_array_
       row_sum_array_[row_id] += val;
     }
@@ -83,6 +87,15 @@ void CustomTable::PutIntField(int32_t row_id, int32_t col_id, int32_t field) {
         }
     }
   }
+  // change index_col1_
+  if(col_id == 1){
+    if(diff != 0){
+      auto pos = std::find(index_col1_[raw_val].begin(), index_col1_[raw_val].end(), row_id);
+      index_col1_[raw_val].erase(pos);
+      int16_t new_val = (int16_t)field;
+      index_col1_[new_val].push_back(row_id);
+    }
+  }
   if(col_id < 4){
     *(int16_t*)(column_first4_ + FIXED_BYTE_LEN*(col_id * num_rows_ + row_id)) = (int16_t)field;
   }
@@ -101,9 +114,12 @@ int64_t CustomTable::PredicatedColumnSum(int32_t threshold1,
                                          int32_t threshold2) {
   // TODO: Implement this!
   int64_t sum = 0;
-  for(auto row_id = 0; row_id < num_rows_; ++row_id){
-    if(GetIntField(row_id, 1) > threshold1 && GetIntField(row_id, 2) < threshold2){
-      sum += GetIntField(row_id, 0);
+  int16_t threshold1_16 = (int16_t)threshold1;
+  for(auto iter1 = index_col1_.upper_bound(threshold1_16); iter1 != index_col1_.end(); ++iter1){
+    for(int32_t row_id : iter1->second){
+      if(GetIntField(row_id, 2) < threshold2){
+        sum += GetIntField(row_id, 0);
+      }
     }
   }
   return sum;
