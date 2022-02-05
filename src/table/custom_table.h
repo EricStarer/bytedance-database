@@ -24,7 +24,7 @@ public:
 
   // Inserts the passed-in int32_t field at row `row_id` and column `col_id`.
   void PutIntField(int32_t row_id, int32_t col_id, int32_t field) override;
-
+  void PutGetPredicatedUpdate(int32_t row_id);
   // Implements the query
   // SELECT SUM(col0) FROM table;
   // Returns the sum of all elements in the first column of the table.
