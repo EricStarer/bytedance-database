@@ -16,15 +16,15 @@ void CustomTable::Load(BaseDataLoader *loader) {
   auto rows = loader->GetRows();
   num_rows_ = rows.size();
   row_sum_array_ = std::vector<int32_t>(num_rows_, 0);
-  column_first4_ = new char[FIXED_BYTE_LEN * num_rows_ * 4];
+  row_first4_ = new char[FIXED_BYTE_LEN * num_rows_ * 4];
   column_last_ = new char[FIXED_BYTE_LEN * num_rows_ * (num_cols_ - 4)];
   for(int32_t row_id = 0; row_id < num_rows_; row_id++){
     auto cur_row = rows.at(row_id);
     for(int32_t col_id = 0; col_id < num_cols_; col_id++){
       if(col_id < 4){
-        int64_t offset = FIXED_BYTE_LEN * ((col_id*num_rows_)+row_id);
+        int64_t offset = FIXED_BYTE_LEN * ((row_id*4)+col_id);
         val = *(int32_t*) (cur_row + FIXED_FIELD_LEN * col_id);
-        *(int16_t*)(column_first4_+offset) = (int16_t)val;
+        *(int16_t*)(row_first4_+offset) = (int16_t)val;
       }
       else{
         int64_t offset = FIXED_BYTE_LEN * (((col_id-4)*num_rows_)+row_id);
@@ -56,7 +56,7 @@ int32_t CustomTable::GetIntField(int32_t row_id, int32_t col_id) {
   // TODO: Implement this!
   int16_t val;
   if(col_id < 4){
-    val = *(int16_t*)(column_first4_ + FIXED_BYTE_LEN*(col_id * num_rows_ + row_id));
+    val = *(int16_t*)(row_first4_ + FIXED_BYTE_LEN*(row_id * 4 + col_id));
   }
   else{
     val = *(int16_t*)(column_last_ + FIXED_BYTE_LEN*((col_id-4) * num_rows_ + row_id));
@@ -97,7 +97,7 @@ void CustomTable::PutIntField(int32_t row_id, int32_t col_id, int32_t field) {
     }
   }
   if(col_id < 4){
-    *(int16_t*)(column_first4_ + FIXED_BYTE_LEN*(col_id * num_rows_ + row_id)) = (int16_t)field;
+    *(int16_t*)(row_first4_ + FIXED_BYTE_LEN*(row_id * 4 + col_id)) = (int16_t)field;
   }
   else{
     *(int16_t*)(column_last_ + FIXED_BYTE_LEN*((col_id-4) * num_rows_ + row_id)) = (int16_t)field;

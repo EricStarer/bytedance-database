@@ -52,7 +52,7 @@ private:
   std::vector<int32_t> row_sum_array_;
   int32_t num_cols_{0};
   int32_t num_rows_{0};
-  char *column_first4_{nullptr};
+  char *row_first4_{nullptr};
   char *column_last_{nullptr};
   std::map<int16_t, std::vector<int32_t>> index_col0_; 
   std::map<int16_t, std::vector<int32_t>> index_col1_;
