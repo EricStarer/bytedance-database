@@ -104,6 +104,14 @@ void CustomTable::PutIntField(int32_t row_id, int32_t col_id, int32_t field) {
   }
 }
 
+void CustomTable::PutGetPredicatedUpdate(int32_t row_id){
+  int16_t val2, val3;
+  val2 = *(int16_t*)(row_first4_ + FIXED_BYTE_LEN*(row_id * 4 + 2));
+  val3 = *(int16_t*)(row_first4_ + FIXED_BYTE_LEN*(row_id * 4 + 2));
+  *(int16_t*)(row_first4_ + FIXED_BYTE_LEN*(row_id * 4 + 3)) = val2+val3;
+  row_sum_array_[row_id] += val2;
+}
+
 int64_t CustomTable::ColumnSum() {
   // TODO: Implement this!
   int64_t res =  sum_col0_;
@@ -144,7 +152,8 @@ int64_t CustomTable::PredicatedUpdate(int32_t threshold) {
   auto target_iter = index_col0_.lower_bound(threshold16);
   for(auto iter = index_col0_.begin(); iter != target_iter; ++iter){
     for(int32_t row_id : iter->second){
-      PutIntField(row_id, 3, GetIntField(row_id, 2) + GetIntField(row_id, 3));
+      //PutIntField(row_id, 3, GetIntField(row_id, 2) + GetIntField(row_id, 3));
+      PutGetPredicatedUpdate(row_id);
       cnt++;
     }
   }
